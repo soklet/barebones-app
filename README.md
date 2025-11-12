@@ -7,13 +7,13 @@
 
 ## Soklet Barebones App
 
-Here we demonstrate building and running a single-file Soklet application with nothing but the Soklet JAR and the JDK (or Docker).  There are no other libraries or frameworks, no Maven build process, no special setup required.
+Here we demonstrate building and running a single-file [Soklet](https://www.soklet.com) application with nothing but the Soklet JAR and the JDK (or Docker).  There are no other libraries or frameworks, no Maven build process, no special setup required.
 
 While a real production system will have more moving parts, it's important to show that you _can_ build server software without ceremony or dependencies.
 
 [A more fully-featured example is also available](https://github.com/soklet/toystore-app).
 
-Two ways to build and run are shown: 
+Two ways to build and run:
 
 * [Directly from the command-line](#building-and-running-without-docker)
 * [Inside of a Docker container](#building-and-running-with-docker)
@@ -40,6 +40,7 @@ public class App {
 
   public static void main(String[] args) throws Exception {
     int port = 8080;
+    
     SokletConfig sokletConfig = SokletConfig.withServer(
       Server.withPort(port).build()
     ).build();
