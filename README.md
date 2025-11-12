@@ -5,7 +5,7 @@
     </picture>
 </a>
 
-## Soklet Example (Barebones)
+## Soklet Barebones App
 
 Here we demonstrate building and running a single-file Soklet application with nothing but the Soklet JAR and the JDK (or Docker).  There are no other libraries or frameworks, no Maven build process, no special setup required.
 
@@ -46,14 +46,14 @@ public class App {
 
     // In an interactive console environment, it makes sense to stop on `Enter` keypress.
     // In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
-    boolean stopOnKeypress = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
+    boolean stopOnEnterKey = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
     try (Soklet soklet = Soklet.withConfig(sokletConfig)) {
       soklet.start();
 
-      System.out.printf("Soklet Example App started on port %d\n", port);
+      System.out.printf("Soklet Barebones App started on port %d\n", port);
 
-      if (stopOnKeypress) {
+      if (stopOnEnterKey) {
         System.out.println("Press [enter] to exit");
         soklet.awaitShutdown(ShutdownTrigger.ENTER_KEY);
       } else {
