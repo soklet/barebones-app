@@ -16,15 +16,13 @@
 
 package com.soklet.example;
 
+import com.soklet.Response;
+import com.soklet.Server;
+import com.soklet.ShutdownTrigger;
 import com.soklet.Soklet;
-import com.soklet.SokletConfiguration;
+import com.soklet.SokletConfig;
 import com.soklet.annotation.GET;
 import com.soklet.annotation.QueryParameter;
-import com.soklet.annotation.Resource;
-import com.soklet.core.Response;
-import com.soklet.core.Server;
-import com.soklet.core.Utilities;
-import com.soklet.core.impl.MicrohttpServer;
 
 import java.util.Map;
 import java.util.Set;
@@ -33,44 +31,41 @@ import java.util.Set;
  * @author <a href="https://www.revetware.com">Mark Allen</a>
  */
 public class App {
-	@Resource
-	public static class ExampleResource {
-		@GET("/")
-		public String index() {
-			return "Hello, world!";
-		}
+	@GET("/")
+	public String index() {
+		return "Hello, world!";
+	}
 
-		@GET("/test-input")
-		public Response testInput(@QueryParameter Integer input) {
-			return new Response.Builder()
-					.headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
-					// A real application would not construct JSON in this manner
-					.body(String.format("{\"input\": %d}", input))
-					.build();
-		}
+	@GET("/test-input")
+	public Response testInput(@QueryParameter Integer input) {
+		return Response.withStatusCode(200)
+				.headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
+				// A real application would not construct JSON in this manner
+				.body(String.format("{\"input\": %d}", input))
+				.build();
 	}
 
 	public static void main(String[] args) throws Exception {
 		int port = 8080;
-		Server server = new MicrohttpServer.Builder(port).build();
-		SokletConfiguration sokletConfiguration = new SokletConfiguration.Builder(server).build();
+		SokletConfig sokletConfig = SokletConfig.withServer(
+				Server.withPort(port).build()
+		).build();
 
 		// In an interactive console environment, it makes sense to stop on `Return` keypress.
 		// In a Docker container, it makes sense to join on the current thread (no stdin)
 		boolean stopOnKeypress = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
-		try (Soklet soklet = new Soklet(sokletConfiguration)) {
+		try (Soklet soklet = Soklet.withConfig(sokletConfig)) {
 			soklet.start();
 
-			System.out.printf("Soklet Example App started on port %d (%s virtual threads).\n",
-					port, Utilities.virtualThreadsAvailable() ? "with" : "without");
+			System.out.printf("Soklet Example App started on port %d\n", port);
 
 			if (stopOnKeypress) {
 				System.out.println("Press [enter] to exit");
-				System.in.read();
+				soklet.awaitShutdown(ShutdownTrigger.ENTER_KEY);
 			} else {
-				Thread.currentThread().join();
+				soklet.awaitShutdown();
 			}
 		}
-	}	
+	}
 }

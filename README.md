@@ -1,10 +1,17 @@
+<a href="https://www.soklet.com">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://cdn.soklet.com/soklet-gh-logo-dark-v2.png">
+        <img alt="Soklet" src="https://cdn.soklet.com/soklet-gh-logo-light-v2.png" width="300" height="101">
+    </picture>
+</a>
+
 ## Soklet Example (Barebones)
 
 Here we demonstrate building and running a single-file Soklet application with nothing but the Soklet JAR and the JDK (or Docker).  There are no other libraries or frameworks, no Maven build process, no special setup required.
 
-While a real production system will have more moving parts, it's important to show that you _can_ build server software without ceremony or dependencies - this is the Soklet ethos.
+While a real production system will have more moving parts, it's important to show that you _can_ build server software without ceremony or dependencies.
 
-[A more fully-featured example is also available](https://github.com/soklet/soklet-example-full).
+[A more fully-featured example is also available](https://github.com/soklet/toystore-app).
 
 Two ways to build and run are shown: 
 
@@ -17,43 +24,40 @@ The entire application is contained in [src/com/soklet/example/App.java](src/com
 
 ```java
 public class App {
-  @Resource
-  public static class ExampleResource {
-    @GET("/")
-    public String index() {
-      return "Hello, world!";
-    }
+  @GET("/")
+  public String index() {
+    return "Hello, world!";
+  }
 
-    @GET("/test-input")
-    public Response testInput(@QueryParameter Integer input) {
-      return new Response.Builder()
-        .headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
-        // A real application would not construct JSON in this manner
-        .body(String.format("{\"input\": %d}", input))
-        .build();
-    }
+  @GET("/test-input")
+  public Response testInput(@QueryParameter Integer input) {
+    return Response.withStatusCode(200)
+      .headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
+      // A real application would not construct JSON in this manner
+      .body(String.format("{\"input\": %d}", input))
+      .build();
   }
 
   public static void main(String[] args) throws Exception {
     int port = 8080;
-    Server server = new MicrohttpServer.Builder(port).build();
-    SokletConfiguration sokletConfiguration = new SokletConfiguration.Builder(server).build();
+    SokletConfig sokletConfig = SokletConfig.withServer(
+      Server.withPort(port).build()
+    ).build();
 
-    // In an interactive console environment, stop on `Return` keypress.
-    // In a Docker container, join on the current thread (normally no stdin)
+    // In an interactive console environment, it makes sense to stop on `Return` keypress.
+    // In a Docker container, it makes sense to join on the current thread (no stdin)
     boolean stopOnKeypress = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
-    try (Soklet soklet = new Soklet(sokletConfiguration)) {
+    try (Soklet soklet = Soklet.withConfig(sokletConfig)) {
       soklet.start();
 
-      System.out.printf("Soklet Example App started on port %d (%s virtual threads).\n",
-        port, Utilities.virtualThreadsAvailable() ? "with" : "without");
+      System.out.printf("Soklet Example App started on port %d\n", port);
 
       if (stopOnKeypress) {
         System.out.println("Press [enter] to exit");
-        System.in.read();
+        soklet.awaitShutdown(ShutdownTrigger.ENTER_KEY);
       } else {
-        Thread.currentThread().join();
+        soklet.awaitShutdown();
       }
     }
   }
@@ -62,18 +66,18 @@ public class App {
 
 ### Building and Running Without Docker
 
-Requires JDK 16+ to be installed on your machine.  If you need one, Amazon provides [Corretto](https://aws.amazon.com/corretto/) - a free-to-use-commercially, production-ready distribution of [OpenJDK](https://openjdk.org/) that includes long-term support.
+Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provides [Corretto](https://aws.amazon.com/corretto/) - a free-to-use-commercially, production-ready distribution of [OpenJDK](https://openjdk.org/) that includes long-term support.
 
 #### Build
 
 ```console
-javac -parameters -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java 
+javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java 
 ```
 
 #### Run
 
 ```console
-java --enable-preview -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App
+java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App
 ```
 
 ### Building and Running With Docker
@@ -81,7 +85,7 @@ java --enable-preview -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App
 Requires [Docker](https://www.docker.com/products/docker-desktop/) to be installed on your machine. The entire [Dockerfile](Dockerfile) is reproduced below.
 
 ```dockerfile
-FROM amazoncorretto:20
+FROM amazoncorretto:25
 EXPOSE 8080
 ENV RUNNING_IN_DOCKER=true
 
@@ -92,24 +96,24 @@ COPY soklet-2.0.0-SNAPSHOT.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "java --enable-preview -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App"]
+CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App"]
 ```
 
 #### Build
 
 ```console
-docker build . --file Dockerfile --tag soklet/example-barebones
+docker build . --file Dockerfile --tag soklet/barebones-app
 ```
 
 #### Run
 
 ```console
-docker run -p 8080:8080 soklet/example-barebones
+docker run -p 8080:8080 soklet/barebones-app
 ```
 
 ### Testing
