@@ -44,8 +44,8 @@ public class App {
       Server.withPort(port).build()
     ).build();
 
-    // In an interactive console environment, it makes sense to stop on `Return` keypress.
-    // In a Docker container, it makes sense to join on the current thread (no stdin)
+    // In an interactive console environment, it makes sense to stop on `Enter` keypress.
+    // In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
     boolean stopOnKeypress = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
     try (Soklet soklet = Soklet.withConfig(sokletConfig)) {
