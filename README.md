@@ -71,13 +71,13 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 
 #### Build
 
-```console
+```shell
 javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java 
 ```
 
 #### Run
 
-```console
+```shell
 java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App
 ```
 
@@ -107,13 +107,13 @@ CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/examp
 
 #### Build
 
-```console
+```shell
 docker build . --file Dockerfile --tag soklet/barebones-app
 ```
 
 #### Run
 
-```console
+```shell
 docker run -p 8080:8080 soklet/barebones-app
 ```
 
@@ -123,7 +123,7 @@ docker run -p 8080:8080 soklet/barebones-app
 
 ##### Request
 
-```console
+```shell
 curl  "http://localhost:8080/"
 ```
 
@@ -137,7 +137,7 @@ Hello, world
 
 ##### Request
 
-```console
+```shell
 curl --verbose "http://localhost:8080/test-input?input=123"
 ```
 
@@ -160,7 +160,7 @@ curl --verbose "http://localhost:8080/test-input?input=123"
 
 ##### Request
 
-```console
+```shell
 curl --verbose "http://localhost:8080/test-input?input=abc"
 ```
 
