@@ -1,3 +1,9 @@
+# To build:
+# docker build . --file Dockerfile --tag soklet/barebones-app
+
+# To run (use Ctrl+C to stop):
+# docker run -p 8080:8080 soklet/barebones-app
+
 FROM amazoncorretto:25
 EXPOSE 8080
 ENV RUNNING_IN_DOCKER=true
@@ -9,13 +15,13 @@ COPY soklet-2.0.0-SNAPSHOT.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java
+RUN javac -parameters -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App"]
+CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/barebones/App"]

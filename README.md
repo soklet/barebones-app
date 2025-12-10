@@ -20,7 +20,7 @@ Two ways to build and run:
 
 ### Source Code
 
-The entire application is contained in [src/com/soklet/example/App.java](src/com/soklet/example/App.java), which is reproduced below.
+The entire application is contained in [src/com/soklet/barebones/App.java](src/com/soklet/barebones/App.java), which is reproduced below.
 
 ```java
 public class App {
@@ -72,13 +72,13 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 #### Build
 
 ```shell
-javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java 
+javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java 
 ```
 
 #### Run
 
 ```shell
-java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App
+java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/barebones/App
 ```
 
 ### Building and Running With Docker
@@ -97,12 +97,12 @@ COPY soklet-2.0.0-SNAPSHOT.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/example/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/example/App"]
+CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/barebones/App"]
 ```
 
 #### Build
@@ -111,7 +111,7 @@ CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/examp
 docker build . --file Dockerfile --tag soklet/barebones-app
 ```
 
-#### Run
+#### Run (use `Ctrl+C` to stop)
 
 ```shell
 docker run -p 8080:8080 soklet/barebones-app
@@ -151,6 +151,7 @@ curl --verbose "http://localhost:8080/test-input?input=123"
 < HTTP/1.1 200 OK
 < Content-Length: 14
 < Content-Type: application/json; charset=UTF-8
+< Date: Sun, 21 Mar 2024 16:19:01 GMT
 < 
 * Connection #0 to host localhost left intact
 {"input": 123}
@@ -174,6 +175,7 @@ curl --verbose "http://localhost:8080/test-input?input=abc"
 < HTTP/1.1 400 Bad Request
 < Content-Length: 21
 < Content-Type: text/plain; charset=UTF-8
+< Date: Sun, 21 Mar 2024 16:19:01 GMT
 < 
 * Connection #0 to host localhost left intact
 HTTP 400: Bad Request

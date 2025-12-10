@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.soklet.example;
+package com.soklet.barebones;
 
 import com.soklet.Response;
 import com.soklet.Server;
