@@ -49,14 +49,14 @@ public class App {
 		int port = 8080;
 		
 		SokletConfig sokletConfig = SokletConfig.withServer(
-				Server.withPort(port).build()
+				Server.fromPort(port)
 		).build();
 
 		// In an interactive console environment, it makes sense to stop on `Enter` keypress.
 		// In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
 		boolean stopOnEnterKey = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
-		try (Soklet soklet = Soklet.withConfig(sokletConfig)) {
+		try (Soklet soklet = Soklet.fromConfig(sokletConfig)) {
 			soklet.start();
 
 			System.out.printf("Soklet Barebones App started on port %d\n", port);
