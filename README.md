@@ -72,13 +72,13 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 #### Build
 
 ```shell
-javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java 
+javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0.jar -d build src/com/soklet/barebones/App.java 
 ```
 
 #### Run
 
 ```shell
-java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/barebones/App
+java -cp soklet-2.0.0.jar:build com/soklet/barebones/App
 ```
 
 ### Building and Running With Docker
@@ -93,16 +93,16 @@ ENV RUNNING_IN_DOCKER=true
 # Copy in source and dependencies
 RUN mkdir -p /app/src
 COPY src /app/src
-COPY soklet-2.0.0-SNAPSHOT.jar /app
+COPY soklet-2.0.0.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0-SNAPSHOT.jar -d build src/com/soklet/barebones/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0-SNAPSHOT.jar:build com/soklet/barebones/App"]
+CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0.jar:build com/soklet/barebones/App"]
 ```
 
 #### Build
