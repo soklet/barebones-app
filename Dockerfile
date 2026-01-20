@@ -11,17 +11,17 @@ ENV RUNNING_IN_DOCKER=true
 # Copy in source and dependencies
 RUN mkdir -p /app/src
 COPY src /app/src
-COPY soklet-2.0.0.jar /app
+COPY soklet-2.0.2.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -cp soklet-2.0.0.jar -d build src/com/soklet/barebones/App.java
+RUN javac -parameters -cp soklet-2.0.2.jar -d build src/com/soklet/barebones/App.java
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.0.jar -d build src/com/soklet/barebones/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-2.0.2.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "java -cp soklet-2.0.0.jar:build com/soklet/barebones/App"]
+CMD ["/bin/sh", "-c", "java -cp soklet-2.0.2.jar:build com/soklet/barebones/App"]
