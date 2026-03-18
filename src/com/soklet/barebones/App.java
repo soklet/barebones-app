@@ -17,7 +17,7 @@
 package com.soklet.barebones;
 
 import com.soklet.Response;
-import com.soklet.Server;
+import com.soklet.HttpServer;
 import com.soklet.ShutdownTrigger;
 import com.soklet.Soklet;
 import com.soklet.SokletConfig;
@@ -48,8 +48,8 @@ public class App {
 	public static void main(String[] args) throws Exception {
 		int port = 8080;
 		
-		SokletConfig sokletConfig = SokletConfig.withServer(
-				Server.fromPort(port)
+		SokletConfig sokletConfig = SokletConfig.withHttpServer(
+				HttpServer.fromPort(port)
 		).build();
 
 		// In an interactive console environment, it makes sense to stop on `Enter` keypress.
