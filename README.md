@@ -7,7 +7,7 @@
 
 ## Soklet Barebones App
 
-Here we demonstrate building and running a single-file "barebones" [Soklet](https://www.soklet.com) application with nothing but the [soklet-3.1.0.jar](https://repo1.maven.org/maven2/com/soklet/soklet/3.1.0/soklet-3.1.0.jar) and the JDK.  There are no other libraries or frameworks, no Servlet container, no Maven build process - no special setup is required.
+Here we demonstrate building and running a single-file "barebones" [Soklet](https://www.soklet.com) application with nothing but the [soklet-3.1.1.jar](https://repo1.maven.org/maven2/com/soklet/soklet/3.1.1/soklet-3.1.1.jar) and the JDK.  There are no other libraries or frameworks, no Servlet container, no Maven build process - no special setup is required.
 
 While a real production system will have more moving parts, this demonstrates that you _can_ build server software without ceremony or dependencies.
 
@@ -72,13 +72,13 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 #### Build
 
 ```shell
-javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.1.0.jar -d build src/com/soklet/barebones/App.java
+javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.1.1.jar -d build src/com/soklet/barebones/App.java
 ```
 
 #### Run
 
 ```shell
-java -cp soklet-3.1.0.jar:build com/soklet/barebones/App
+java -cp soklet-3.1.1.jar:build com/soklet/barebones/App
 ```
 
 ### Building and Running With Docker
@@ -93,16 +93,16 @@ ENV RUNNING_IN_DOCKER=true
 # Copy in source and dependencies
 RUN mkdir -p /app/src
 COPY src /app/src
-COPY soklet-3.1.0.jar /app
+COPY soklet-3.1.1.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.1.0.jar -d build src/com/soklet/barebones/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.1.1.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "exec java -cp soklet-3.1.0.jar:build com/soklet/barebones/App"]
+CMD ["/bin/sh", "-c", "exec java -cp soklet-3.1.1.jar:build com/soklet/barebones/App"]
 ```
 
 #### Build
