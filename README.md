@@ -7,7 +7,7 @@
 
 ## Soklet Barebones App
 
-Here we demonstrate building and running a single-file "barebones" [Soklet](https://www.soklet.com) application with nothing but the [soklet-3.5.1.jar](https://repo1.maven.org/maven2/com/soklet/soklet/3.5.1/soklet-3.5.1.jar) and the JDK.  There are no other libraries or frameworks, no Servlet container, no Maven build process - no special setup is required.
+Here we demonstrate building and running a single-file "barebones" [Soklet](https://www.soklet.com) application with nothing but the [soklet-4.0.0.jar](https://repo1.maven.org/maven2/com/soklet/soklet/4.0.0/soklet-4.0.0.jar) and the JDK.  There are no other libraries or frameworks, no Servlet container, no Maven build process - no special setup is required.
 
 While a real production system will have more moving parts, this demonstrates that you _can_ build server software without ceremony or dependencies.
 
@@ -24,6 +24,11 @@ The entire application is contained in [src/com/soklet/barebones/App.java](src/c
 
 ```java
 public class App {
+  private static final int DEFAULT_HTTP_PORT = 8080;
+  private static final String LOOPBACK_HTTP_HOST = "127.0.0.1";
+  private static final String LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE =
+    "SOKLET_BAREBONES_LOOPBACK_PORT";
+
   @GET("/")
   public String index() {
     return "Hello, world!";
@@ -38,28 +43,50 @@ public class App {
       .build();
   }
 
+  private static int resolveHttpPort(String value) {
+    if (value == null)
+      return DEFAULT_HTTP_PORT;
+
+    int port;
+
+    try {
+      port = Integer.parseInt(value);
+    } catch (NumberFormatException exception) {
+      throw new IllegalArgumentException(String.format(
+        "%s must be an integer from 1 through 65535",
+        LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE), exception);
+    }
+
+    if (port < 1 || port > 65535)
+      throw new IllegalArgumentException(String.format(
+        "%s must be an integer from 1 through 65535", LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE));
+
+    return port;
+  }
+
   public static void main(String[] args) throws Exception {
-    int port = 8080;
+    String loopbackPortOverride = System.getenv(LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE);
+    int port = resolveHttpPort(loopbackPortOverride);
+    HttpServer.Builder httpServerBuilder = HttpServer.withPort(port);
+
+    if (loopbackPortOverride != null)
+      httpServerBuilder.host(LOOPBACK_HTTP_HOST);
     
     SokletConfig sokletConfig = SokletConfig.withHttpServer(
-      HttpServer.fromPort(port)
+      httpServerBuilder.build()
     ).build();
 
     // In an interactive console environment, it makes sense to stop on `Enter` keypress.
     // In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
     boolean stopOnEnterKey = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
-    try (Soklet soklet = Soklet.fromConfig(sokletConfig)) {
-      soklet.start();
+    System.out.printf("Starting Soklet Barebones App on port %d\n", port);
 
-      System.out.printf("Soklet Barebones App started on port %d\n", port);
-
-      if (stopOnEnterKey) {
-        System.out.println("Press [enter] to exit");
-        soklet.awaitShutdown(ShutdownTrigger.ENTER_KEY);
-      } else {
-        soklet.awaitShutdown();
-      }
+    if (stopOnEnterKey) {
+      System.out.println("Press [enter] to exit once ready");
+      SokletApplication.run(sokletConfig, ShutdownTrigger.ENTER_KEY);
+    } else {
+      SokletApplication.run(sokletConfig);
     }
   }
 }
@@ -72,13 +99,22 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 #### Build
 
 ```shell
-javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.5.1.jar -d build src/com/soklet/barebones/App.java
+javac -parameters -processor com.soklet.SokletProcessor -cp soklet-4.0.0.jar -d build src/com/soklet/barebones/App.java
 ```
 
 #### Run
 
 ```shell
-java -cp soklet-3.5.1.jar:build com/soklet/barebones/App
+java -cp soklet-4.0.0.jar:build com/soklet/barebones/App
+```
+
+The application listens on port `8080` with its normal all-interface binding by
+default. Local noninteractive automation can instead select an IPv4 loopback
+port without changing the source code:
+
+```shell
+RUNNING_IN_DOCKER=true SOKLET_BAREBONES_LOOPBACK_PORT=18080 \
+  java -cp soklet-4.0.0.jar:build com/soklet/barebones/App
 ```
 
 ### Building and Running With Docker
@@ -93,16 +129,16 @@ ENV RUNNING_IN_DOCKER=true
 # Copy in source and dependencies
 RUN mkdir -p /app/src
 COPY src /app/src
-COPY soklet-3.5.1.jar /app
+COPY soklet-4.0.0.jar /app
 
 # Build the app
 WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-3.5.1.jar -d build src/com/soklet/barebones/App.java
+RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-4.0.0.jar -d build src/com/soklet/barebones/App.java
 
 # Unprivileged user for runtime
 USER 1000
 
-CMD ["/bin/sh", "-c", "exec java -cp soklet-3.5.1.jar:build com/soklet/barebones/App"]
+CMD ["/bin/sh", "-c", "exec java -cp soklet-4.0.0.jar:build com/soklet/barebones/App"]
 ```
 
 #### Build

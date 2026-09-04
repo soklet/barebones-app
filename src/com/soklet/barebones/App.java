@@ -19,7 +19,7 @@ package com.soklet.barebones;
 import com.soklet.Response;
 import com.soklet.HttpServer;
 import com.soklet.ShutdownTrigger;
-import com.soklet.Soklet;
+import com.soklet.SokletApplication;
 import com.soklet.SokletConfig;
 import com.soklet.annotation.GET;
 import com.soklet.annotation.QueryParameter;
@@ -31,6 +31,10 @@ import java.util.Set;
  * @author <a href="https://www.revetware.com">Mark Allen</a>
  */
 public class App {
+	private static final int DEFAULT_HTTP_PORT = 8080;
+	private static final String LOOPBACK_HTTP_HOST = "127.0.0.1";
+	private static final String LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE = "SOKLET_BAREBONES_LOOPBACK_PORT";
+
 	@GET("/")
 	public String index() {
 		return "Hello, world!";
@@ -45,28 +49,50 @@ public class App {
 				.build();
 	}
 
+	private static int resolveHttpPort(String value) {
+		if (value == null)
+			return DEFAULT_HTTP_PORT;
+
+		int port;
+
+		try {
+			port = Integer.parseInt(value);
+		} catch (NumberFormatException exception) {
+			throw new IllegalArgumentException(String.format(
+					"%s must be an integer from 1 through 65535",
+					LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE), exception);
+		}
+
+		if (port < 1 || port > 65535)
+			throw new IllegalArgumentException(String.format(
+					"%s must be an integer from 1 through 65535", LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE));
+
+		return port;
+	}
+
 	public static void main(String[] args) throws Exception {
-		int port = 8080;
+		String loopbackPortOverride = System.getenv(LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE);
+		int port = resolveHttpPort(loopbackPortOverride);
+		HttpServer.Builder httpServerBuilder = HttpServer.withPort(port);
+
+		if (loopbackPortOverride != null)
+			httpServerBuilder.host(LOOPBACK_HTTP_HOST);
 		
 		SokletConfig sokletConfig = SokletConfig.withHttpServer(
-				HttpServer.fromPort(port)
+				httpServerBuilder.build()
 		).build();
 
 		// In an interactive console environment, it makes sense to stop on `Enter` keypress.
 		// In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
 		boolean stopOnEnterKey = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
 
-		try (Soklet soklet = Soklet.fromConfig(sokletConfig)) {
-			soklet.start();
+		System.out.printf("Starting Soklet Barebones App on port %d\n", port);
 
-			System.out.printf("Soklet Barebones App started on port %d\n", port);
-
-			if (stopOnEnterKey) {
-				System.out.println("Press [enter] to exit");
-				soklet.awaitShutdown(ShutdownTrigger.ENTER_KEY);
-			} else {
-				soklet.awaitShutdown();
-			}
+		if (stopOnEnterKey) {
+			System.out.println("Press [enter] to exit once ready");
+			SokletApplication.run(sokletConfig, ShutdownTrigger.ENTER_KEY);
+		} else {
+			SokletApplication.run(sokletConfig);
 		}
 	}
 }
