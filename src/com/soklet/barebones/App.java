@@ -24,8 +24,8 @@ import com.soklet.SokletConfig;
 import com.soklet.annotation.GET;
 import com.soklet.annotation.QueryParameter;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author <a href="https://www.revetware.com">Mark Allen</a>
@@ -43,7 +43,7 @@ public class App {
 	@GET("/test-input")
 	public Response testInput(@QueryParameter Integer input) {
 		return Response.withStatusCode(200)
-				.headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
+				.headers(Map.of("Content-Type", List.of("application/json; charset=UTF-8")))
 				// A real application would not construct JSON in this manner
 				.body(String.format("{\"input\": %d}", input))
 				.build();

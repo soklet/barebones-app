@@ -37,7 +37,7 @@ public class App {
   @GET("/test-input")
   public Response testInput(@QueryParameter Integer input) {
     return Response.withStatusCode(200)
-      .headers(Map.of("Content-Type", Set.of("application/json; charset=UTF-8")))
+      .headers(Map.of("Content-Type", List.of("application/json; charset=UTF-8")))
       // A real application would not construct JSON in this manner
       .body(String.format("{\"input\": %d}", input))
       .build();
