@@ -13,22 +13,12 @@ While a real production system will have more moving parts, this demonstrates th
 
 If you'd like an example of a production-ready system, see the [Toy Store App](https://www.soklet.com/docs/toystore-app).
 
-Two ways to build and run:
-
-* [Directly from the command-line](#building-and-running-without-docker)
-* [Inside of a Docker container](#building-and-running-with-docker)
-
 ### Source Code
 
 The entire application is contained in [src/com/soklet/barebones/App.java](src/com/soklet/barebones/App.java), which is reproduced below.
 
 ```java
 public class App {
-  private static final int DEFAULT_HTTP_PORT = 8080;
-  private static final String LOOPBACK_HTTP_HOST = "127.0.0.1";
-  private static final String LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE =
-    "SOKLET_BAREBONES_LOOPBACK_PORT";
-
   @GET("/")
   public String index() {
     return "Hello, world!";
@@ -37,64 +27,29 @@ public class App {
   @GET("/test-input")
   public Response testInput(@QueryParameter Integer input) {
     return Response.withStatusCode(200)
-      .headers(Map.of("Content-Type", List.of("application/json; charset=UTF-8")))
-      // A real application would not construct JSON in this manner
-      .body(String.format("{\"input\": %d}", input))
-      .build();
-  }
-
-  private static int resolveHttpPort(String value) {
-    if (value == null)
-      return DEFAULT_HTTP_PORT;
-
-    int port;
-
-    try {
-      port = Integer.parseInt(value);
-    } catch (NumberFormatException exception) {
-      throw new IllegalArgumentException(String.format(
-        "%s must be an integer from 1 through 65535",
-        LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE), exception);
-    }
-
-    if (port < 1 || port > 65535)
-      throw new IllegalArgumentException(String.format(
-        "%s must be an integer from 1 through 65535", LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE));
-
-    return port;
+        .headers(Map.of("Content-Type", List.of("application/json; charset=UTF-8")))
+        // A real application would not construct JSON in this manner
+        .body(String.format("{\"input\": %d}", input))
+        .build();
   }
 
   public static void main(String[] args) throws Exception {
-    String loopbackPortOverride = System.getenv(LOOPBACK_HTTP_PORT_ENVIRONMENT_VARIABLE);
-    int port = resolveHttpPort(loopbackPortOverride);
-    HttpServer.Builder httpServerBuilder = HttpServer.withPort(port);
-
-    if (loopbackPortOverride != null)
-      httpServerBuilder.host(LOOPBACK_HTTP_HOST);
-    
     SokletConfig sokletConfig = SokletConfig.withHttpServer(
-      httpServerBuilder.build()
+        HttpServer.withPort(8080).host("127.0.0.1").build()
     ).build();
 
-    // In an interactive console environment, it makes sense to stop on `Enter` keypress.
-    // In a Docker container, it makes sense to wait for JVM shutdown (e.g. SIGTERM)
-    boolean stopOnEnterKey = !"true".equals(System.getenv("RUNNING_IN_DOCKER"));
-
-    System.out.printf("Starting Soklet Barebones App on port %d\n", port);
-
-    if (stopOnEnterKey) {
-      System.out.println("Press [enter] to exit once ready");
-      SokletApplication.run(sokletConfig, ShutdownTrigger.ENTER_KEY);
-    } else {
-      SokletApplication.run(sokletConfig);
-    }
+    Soklet soklet = Soklet.run(sokletConfig);
+    System.out.println("Soklet Barebones App started on port 8080");
+    soklet.awaitShutdown();
   }
 }
 ```
 
-### Building and Running Without Docker
+The app listens on `http://127.0.0.1:8080/`. Use Ctrl+C to stop it; Soklet shuts down automatically with the JVM. For scoped runs and embedded applications, see [Application Lifecycle](https://www.soklet.com/docs/application-lifecycle).
 
-Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provides [Corretto](https://aws.amazon.com/corretto/) - a free-to-use-commercially, production-ready distribution of [OpenJDK](https://openjdk.org/) that includes long-term support.
+### Building and Running
+
+Requires JDK 21+ to be installed on your machine.  If you need one, Amazon provides [Corretto](https://aws.amazon.com/corretto/) - a free-to-use-commercially, production-ready distribution of [OpenJDK](https://openjdk.org/) that includes long-term support.
 
 #### Build
 
@@ -102,56 +57,12 @@ Requires JDK 17+ to be installed on your machine.  If you need one, Amazon provi
 javac -parameters -processor com.soklet.SokletProcessor -cp soklet-4.0.0.jar -d build src/com/soklet/barebones/App.java
 ```
 
-#### Run
+#### Run (use Ctrl+C to stop)
 
 ```shell
 java -cp soklet-4.0.0.jar:build com/soklet/barebones/App
 ```
 
-The application listens on port `8080` with its normal all-interface binding by
-default. Local noninteractive automation can instead select an IPv4 loopback
-port without changing the source code:
-
-```shell
-RUNNING_IN_DOCKER=true SOKLET_BAREBONES_LOOPBACK_PORT=18080 \
-  java -cp soklet-4.0.0.jar:build com/soklet/barebones/App
-```
-
-### Building and Running With Docker
-
-Requires [Docker](https://www.docker.com/products/docker-desktop/) to be installed on your machine. The entire [Dockerfile](Dockerfile) is reproduced below.
-
-```dockerfile
-FROM amazoncorretto:25
-EXPOSE 8080
-ENV RUNNING_IN_DOCKER=true
-
-# Copy in source and dependencies
-RUN mkdir -p /app/src
-COPY src /app/src
-COPY soklet-4.0.0.jar /app
-
-# Build the app
-WORKDIR /app
-RUN javac -parameters -processor com.soklet.SokletProcessor -cp soklet-4.0.0.jar -d build src/com/soklet/barebones/App.java
-
-# Unprivileged user for runtime
-USER 1000
-
-CMD ["/bin/sh", "-c", "exec java -cp soklet-4.0.0.jar:build com/soklet/barebones/App"]
-```
-
-#### Build
-
-```shell
-docker build . --file Dockerfile --tag soklet/barebones-app
-```
-
-#### Run (use `Ctrl+C` to stop)
-
-```shell
-docker run -p 8080:8080 soklet/barebones-app
-```
 
 ### Testing
 
